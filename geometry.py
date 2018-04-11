@@ -31,9 +31,20 @@ class Vector:
     def __str__(self):
         return "("+str(self.x) + ","+str(self.y)+")"
 
+    def cross(self, other):
+        return (self.x*other.y - self.y*other.x)
+
 def intersect(point,rect):
     return rect.x<=point[0]<=rect.x+rect.width and rect.y<=point[1]<=rect.y+rect.height
 
+
+def colinear(p1,p2,p3):
+    v1 = p2-p1
+    v2 = p3-p1
+    if(v1.cross(v2)==0):
+        return True
+    else:
+        return False
 
 def dot(v1,v2):
     return v1.x*v2.x + v1.y*v2.y
