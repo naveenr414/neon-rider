@@ -1,108 +1,101 @@
 import setup
 import pygame
 import inputControl
-from geometry import intersect, Rectangle
+from geometry import intersect, Rectangle, Vector
 import copy
 
 #Create a font
 pygame.font.init()
-titleFont = pygame.font.SysFont('arial',40)
+font = pygame.font.SysFont('Comic Sans MS',30)
 
-#Buttons
-startButton = Rectangle(500,100,200,100)
-galleryButton = Rectangle(500,250,200,100)
-quitButton = Rectangle(500,400,200,100)
-buttons = [(startButton,setup.green),(galleryButton,setup.yellow),(quitButton,setup.red)] 
+class Button:
+    def __init__(self,imageLocation,location):
+        self.image = pygame.image.load(imageLocation)
+        self.size = self.image.get_rect().size
+        self.location = location
+        self.rect = Rectangle(self.location.x,self.location.y,
+                              self.size[0],self.size[1])
 
-#Number of players buttons
-onePlayer = Rectangle(800, 100, 50, 50)
-twoPlayers = Rectangle(800, 200, 50, 50)
-threePlayers = Rectangle(800, 300, 50, 50)
-fourPlayers = Rectangle(800,400,50,50)
-numberPlayerRectangles = [onePlayer,twoPlayers,threePlayers,fourPlayers]
-numberPlayers = []
+    def intersect(self,p):
+        return intersect(p,self.rect)
 
-#The texts
-playersText = []
-humanText = []
-aiText = []
+class Text:
+    def __init__(self,text,pos,color):
+        self.surface = font.render(text,False,color)
+        self.pos = pos
+        
+def createScores():
+    textS = []
+    for i in range(setup.players+1):
+        x = setup.width//6-10
+        y = setup.height//4+font.get_height() * (i+1)
 
-#The Buttons for AI/Human
-humanAIRectangles = [[Rectangle(900, 100, 150, 50),Rectangle(1100, 100, 50, 50)],
-			[Rectangle(900, 200, 150, 50),Rectangle(1100, 200, 50, 50)],
-			[Rectangle(900, 300, 150, 50),Rectangle(1100, 300, 50, 50)],
-			[Rectangle(900, 400, 150, 50),Rectangle(1100, 400, 50, 50)]]
+        text = "Player "+str(i)+": "+str(setup.scores[i-1])
+        if(i==0):
+            text = "Scores: "
+            
+        textS.append(Text(text,(x,y),setup.white))
 
-#Text
-textList = [['Welcome to NEON RIDER',setup.white,(370,20)],
-            ['S T A R T',setup.black,(startButton.x+15,startButton.y+25)],
-            ['GALLERY',setup.black,(galleryButton.x+2, galleryButton.y+25)],
-            ['Q U I T',setup.black,(quitButton.x+35,quitButton.y+25)]]
+    return textS
+    
 
 
-for i, text in enumerate(textList):
-    textList[i] = [titleFont.render(text[0],False,text[1]),text[2]]
+x = setup.width//4
+y = setup.height//10
+startButton = Button("images/StartButton.png",Vector(x,y))
+galleryButton = Button("images/GalleryButton.png",Vector(2*x,y))
+quitButton = Button("images/QuitButton.png",Vector(3*x,y))
 
-#Create the boxes for the number of players
-for i in range(setup.players):
-    playersText.append((titleFont.render(str(i+1),False,setup.black),(numberPlayerRectangles[i].x+15,numberPlayerRectangles[i].y+4)))
+mainButtons = [startButton,galleryButton,quitButton]
+numberButtons = []
 
-    #We use green boxes for human players 
-    if(setup.humanList[i]):
-        numberPlayers.append([numberPlayerRectangles[i],setup.green])
-    else:
-        numberPlayers.append([numberPlayerRectangles[i],setup.red])
+x = setup.width//20
+y = setup.height//6
 
-for i in range(setup.players):
-    humanText.append((titleFont.render("Human",False,setup.black),(humanAIRectangles[i][0].x+12,humanAIRectangles[i][0].y+4)))
-    aiText.append((titleFont.render("AI",False,setup.black),(humanAIRectangles[i][1].x+3,humanAIRectangles[i][1].y+4)))
+for i in range(setup.maxPlayers):
+    num = i+1
+    temp = []
+
+    #The Buttons with 1, 2, etc.
+    temp.append(Button("images/"+str(num)+"Button.png",
+                                Vector(10*x-10,y*num+y)))
+
+    temp.append(Button("images/AIButton.png",
+                                Vector(12*x,num*y+y)))
+    temp.append(Button("images/HumanButton.png",
+                                Vector(16*x,y*num+y)))
+
+    numberButtons.append(temp)
+
+textSurfaces = createScores()
+usedScores = setup.scores
+
+resetScore = Button("images/ResetScoreButton.png",Vector(setup.width//6,setup.height*3//4))
 
 def menuSetup(screen):
-    for i in range(setup.maxPlayers):
-        pygame.draw.rect(screen,numberPlayers[i][1],numberPlayers[i][0].getSize())
+    pygame.mouse.set_visible(True)
 
-    for i in buttons:
-        pygame.draw.rect(screen,i[1],i[0].getSize())
+    for i in mainButtons:
+        screen.blit(i.image,i.location.toArray())
 
-    for i in range(setup.maxPlayers):
-        screen.blit(playersText[i][0],playersText[i][1])
+    for i in numberButtons:
+        for j in i:
+            screen.blit(j.image,j.location.toArray())
 
-    for i in textList:
-        screen.blit(i[0],i[1])
+    for i in textSurfaces:
+        screen.blit(i.surface,i.pos)
 
-    for i in range(setup.players):
-        if(setup.humanList[i]):
-            pygame.draw.rect(screen,setup.green,humanAIRectangles[i][0].getSize())
-            pygame.draw.rect(screen,setup.red,humanAIRectangles[i][1].getSize())
-        else:
-            pygame.draw.rect(screen,setup.red,humanAIRectangles[i][0].getSize())
-            pygame.draw.rect(screen,setup.green,humanAIRectangles[i][1].getSize())
-            
-        screen.blit(humanText[i][0],humanText[i][1])
-        screen.blit(aiText[i][0],aiText[i][1])  
+    screen.blit(resetScore.image,resetScore.location.toArray())
 
+    mousePos = pygame.mouse.get_pos()
 
-    #Draw the mouse
-    pygame.draw.circle(screen,setup.white,pygame.mouse.get_pos(),10)
-
-    
     if(inputControl.mouseDown):
-        if(intersect(pygame.mouse.get_pos(),quitButton)):
-            return -1
-        if(intersect(pygame.mouse.get_pos(),startButton)):
+        if(startButton.intersect(mousePos)):
             return 1
-        if(intersect(pygame.mouse.get_pos(),galleryButton)):
-            return 3
-        for i in range(len(numberPlayerRectangles)):
-            if(intersect(pygame.mouse.get_pos(),numberPlayerRectangles[i])):
-                #Change the color, so that green background for current num players
-                numberPlayers[setup.players-1][1] = setup.red
-                setup.players = i+1
-                numberPlayers[setup.players-1][1] = setup.green
-        for i in range(0,setup.players):
-            if(intersect(pygame.mouse.get_pos(),humanAIRectangles[i][0])):
-                setup.humanList[i] = True
-            if(intersect(pygame.mouse.get_pos(),humanAIRectangles[i][1])):
-                setup.humanList[i] = False
-               
+        if(galleryButton.intersect(mousePos)):
+            return 4
+        if(quitButton.intersect(mousePos)):
+            return -1
+            
+
     return 0

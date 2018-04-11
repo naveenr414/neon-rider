@@ -3,8 +3,9 @@ height = 600
 
 players = 4
 maxPlayers = 4
-humanList = [False]*players
+humanList = [False for i in range(players)]
 humanList[-1] = True
+scores = [0 for i in range(players)]
 
 #Colors
 black = (0,0,0)

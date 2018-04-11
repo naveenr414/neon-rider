@@ -34,6 +34,9 @@ class Vector:
     def cross(self, other):
         return (self.x*other.y - self.y*other.x)
 
+    def toArray(self):
+        return [self.x,self.y]
+
 def intersect(point,rect):
     return rect.x<=point[0]<=rect.x+rect.width and rect.y<=point[1]<=rect.y+rect.height
 
