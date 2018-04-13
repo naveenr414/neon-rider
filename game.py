@@ -5,10 +5,11 @@ import copy
 import pygame
 import inputControl
 import time
+from gui import Text
 
 class Player:
     def __init__(self,pos,color,direction,number,isHuman):
-        self.speed = 1
+        self.speed = 10
         self.pos = pos
         self.color = color
         self.direction = direction
@@ -42,6 +43,31 @@ for i in range(0,4):
     else:
         textList.append((textFont.render(str(i),False,setup.white),(590,300)))
 
+x = 5*setup.width//6
+hudText = []
+hudText.append(Text("Status:",(x,setup.height//6),setup.white,f=smallFont))
+hudText.append(Text("Scores:",(x,setup.height//2),setup.white,f=smallFont))
+hudText.append(Text("Controls:",(x,4*setup.height//5),setup.white,f=smallFont))
+
+readyText = []
+unreadyText = []
+
+for i in range(0,setup.players):
+    readyText.append(Text("Player "+str(i+1)+": Ready",(x,setup.height//6+smallFont.get_height()*(i+1)),
+                          setup.white,f=smallFont))
+    unreadyText.append(Text("Player "+str(i+1)+": Not Ready",(x,setup.height//6+smallFont.get_height()*(i+1)),
+                          setup.white,f=smallFont))
+
+scoresText = []
+for i in range(setup.players):
+    scoresText.append(Text("Player "+str(i+1)+": "+str(setup.scores[i]),(x,setup.height//2+
+                            smallFont.get_height()*(i+1)),setup.white,f=smallFont))
+
+controlText = []
+for i in range(setup.players):
+    controlText.append(Text("Player "+str(i+1)+": "+playerKeys[i],(x,4*setup.height//5+
+                            smallFont.get_height()*(i+1)),setup.white,f=smallFont))
+
 class State:
     def __init__(self):
         self.players = []
@@ -51,6 +77,7 @@ class State:
         self.startFlag = 3
         self.deathResults = []
         self.deathTexts = []
+        self.ready = [False]*setup.players
 
 def killPlayer(state,i,j):
     yPos = len(state.deathResults)*40/3 + 20
@@ -63,25 +90,31 @@ def killPlayer(state,i,j):
     state.deathTexts.append((smallFont.render("Player "+str(j+1),
     False,state.players[j].color),(110,yPos)))
 
+def drawHud(screen,state):
+    x = 5*setup.width//6-10
+    pygame.draw.line(screen,setup.white,(x,0),(x,setup.height))
+
+    for i in hudText:
+        screen.blit(i.surface,i.pos)
+
+    for i in range(len(readyText)):
+        if(state.ready[i]):
+            screen.blit(readyText[i].surface,readyText[i].pos)
+        else:
+            screen.blit(unreadyText[i].surface,unreadyText[i].pos)
+
+    for i in scoresText:
+        screen.blit(i.surface,i.pos)
+
+    for i in controlText:
+        screen.blit(i.surface,i.pos)
 
 def update(screen,state):
+    drawHud(screen,state)
+    
     if(state.startFlag>-2):
         screen.blit(textList[state.startFlag][0],textList[state.startFlag][1])
         state.startFlag-=1
-
-        #Create the player texts if its not created yet
-        if(len(playerTexts)==0):
-            for i in range(0,setup.players):
-                playerTexts.append((textFont.render(str(i+1)+": "+playerKeys[i],False,state.players[i].color),
-                                    (state.players[i].pos.x-50,state.players[i].pos.y+10)))
-
-
-        #Draw the players and the instructions
-        for i in range(0,setup.players):
-            currentPlayer = state.players[i]
-            pygame.draw.rect(screen,currentPlayer.color,(currentPlayer.pos.x,currentPlayer.pos.y,1,1))
-            screen.blit(playerTexts[i][0],playerTexts[i][1])
-            
         
         if(state.startFlag!=2):
             time.sleep(1)
@@ -95,13 +128,13 @@ def update(screen,state):
             #Update the players positions
             for j in range(1,currentPlayer.speed+1):
                 newPos = currentPlayer.pos+currentPlayer.direction*j
-                if(newPos.x<0 or newPos.x>setup.width
+                if(newPos.x<0 or newPos.x>setup.gameWidth
                 or newPos.y<0 or newPos.y>setup.height
                 or newPos in [x[0] for x in state.board]):
                     currentPlayer.alive = False
 
                     #Check if they were killed by going outside the box, or by another player
-                    if(newPos.x<0 or newPos.x>setup.width
+                    if(newPos.x<0 or newPos.x>setup.gameWidth
                     or newPos.y<0 or newPos.y>setup.height):
                         killPlayer(state,i,i)
                     else:

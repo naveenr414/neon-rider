@@ -20,8 +20,8 @@ class Button:
         return intersect(p,self.rect)
 
 class Text:
-    def __init__(self,text,pos,color):
-        self.surface = font.render(text,False,color)
+    def __init__(self,text,pos,color,f=font):
+        self.surface = f.render(text,False,color)
         self.pos = pos
         
 def createScores():
@@ -37,8 +37,6 @@ def createScores():
         textS.append(Text(text,(x,y),setup.white))
 
     return textS
-    
-
 
 x = setup.width//4
 y = setup.height//10
@@ -59,7 +57,6 @@ for i in range(setup.maxPlayers):
     #The Buttons with 1, 2, etc.
     temp.append(Button("images/"+str(num)+"Button.png",
                                 Vector(10*x-10,y*num+y)))
-
     temp.append(Button("images/AIButton.png",
                                 Vector(12*x,num*y+y)))
     temp.append(Button("images/HumanButton.png",

@@ -1,5 +1,6 @@
 width = 1200
 height = 600
+gameWidth = width*5//6-10
 
 players = 4
 maxPlayers = 4
