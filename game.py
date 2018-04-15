@@ -34,7 +34,8 @@ playerKeys = ["W, A, S, D", "Arrow Keys", "Y, G, H, J", "P, L, ;, '"]
 playerTexts = []
 
 textFont = pygame.font.SysFont('arial',25)
-smallFont = pygame.font.SysFont('arial',15)
+smallFont = pygame.font.SysFont('Comic Sans MS',15)
+smallFont.set_bold(True)
 textList = []
 
 for i in range(0,4):
@@ -45,28 +46,48 @@ for i in range(0,4):
 
 x = 5*setup.width//6
 hudText = []
-hudText.append(Text("Status:",(x,setup.height//6),setup.white,f=smallFont))
-hudText.append(Text("Scores:",(x,setup.height//2),setup.white,f=smallFont))
-hudText.append(Text("Controls:",(x,4*setup.height//5),setup.white,f=smallFont))
-
+playerText = []
 readyText = []
 unreadyText = []
 
-for i in range(0,setup.players):
-    readyText.append(Text("Player "+str(i+1)+": Ready",(x,setup.height//6+smallFont.get_height()*(i+1)),
-                          setup.white,f=smallFont))
-    unreadyText.append(Text("Player "+str(i+1)+": Not Ready",(x,setup.height//6+smallFont.get_height()*(i+1)),
-                          setup.white,f=smallFont))
+for i in range(-1,setup.players):
+    y = setup.height//10+smallFont.get_height()*(i+1)
+
+    if(i==-1):
+        hudText.append(Text("Status:",(x,y),setup.white,f=smallFont))
+    else:
+        text = "Player "+str(i+1)+": "
+        playerText.append(Text(text,(x,y),setup.colors[i],f=smallFont))
+        
+        readyText.append(Text("Ready",(x+smallFont.size(text)[0],y),
+                              setup.green,f=smallFont))
+        unreadyText.append(Text("Not Ready",(x+smallFont.size(text)[0],y),
+                              setup.red,f=smallFont))
+
 
 scoresText = []
-for i in range(setup.players):
-    scoresText.append(Text("Player "+str(i+1)+": "+str(setup.scores[i]),(x,setup.height//2+
-                            smallFont.get_height()*(i+1)),setup.white,f=smallFont))
+for i in range(-1,setup.players):
+    temp = []
+    y = setup.height//3+smallFont.get_height()*(i+1)
+
+    if(i==-1):
+        hudText.append(Text("Scores:",(x,y),setup.white,f=smallFont))
+    else:
+        text = "Player "+str(i+1)+ ": "
+        temp.append(Text("Player "+str(i+1)+": ",(x,y),
+                         setup.colors[i],f=smallFont))
+        temp.append(Text(str(setup.scores[i]),(x+smallFont.size(text)[0],y),
+                         setup.white,f=smallFont))
+        scoresText.append(temp)
+
 
 controlText = []
-for i in range(setup.players):
-    controlText.append(Text("Player "+str(i+1)+": "+playerKeys[i],(x,4*setup.height//5+
-                            smallFont.get_height()*(i+1)),setup.white,f=smallFont))
+for i in range(-1,setup.players):
+    y = 3*setup.height//5+smallFont.get_height()*(i+1)
+    if(i==-1):
+        hudText.append(Text("Controls:",(x,y),setup.white,f=smallFont))
+    else:
+        controlText.append(Text("Player "+str(i+1)+": "+playerKeys[i],(x,y),setup.colors[i],f=smallFont))
 
 class State:
     def __init__(self):
@@ -97,16 +118,18 @@ def drawHud(screen,state):
     for i in hudText:
         screen.blit(i.surface,i.pos)
 
-    for i in range(len(readyText)):
+    for i in range(setup.players):
+        screen.blit(playerText[i].surface,playerText[i].pos)
         if(state.ready[i]):
             screen.blit(readyText[i].surface,readyText[i].pos)
         else:
             screen.blit(unreadyText[i].surface,unreadyText[i].pos)
 
-    for i in scoresText:
-        screen.blit(i.surface,i.pos)
+    for i in scoresText[:setup.players]:
+        for button in i:
+            screen.blit(button.surface,button.pos)
 
-    for i in controlText:
+    for i in controlText[:setup.players]:
         screen.blit(i.surface,i.pos)
 
 def update(screen,state):
