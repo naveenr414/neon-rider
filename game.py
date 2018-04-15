@@ -40,15 +40,14 @@ textList = []
 
 for i in range(0,4):
     if(i==0):
-        textList.append((textFont.render("GO!",False,setup.white),(590,300)))
+        textList.append((textFont.render("GO!",False,setup.white),(setup.width//2,setup.height//2)))
     else:
-        textList.append((textFont.render(str(i),False,setup.white),(590,300)))
+        textList.append((textFont.render(str(i),False,setup.white),(setup.width//2,setup.height//2)))
 
 x = 5*setup.width//6
 hudText = []
 playerText = []
-readyText = []
-unreadyText = []
+statusText = []
 
 for i in range(-1,setup.players):
     y = setup.height//10+smallFont.get_height()*(i+1)
@@ -59,9 +58,7 @@ for i in range(-1,setup.players):
         text = "Player "+str(i+1)+": "
         playerText.append(Text(text,(x,y),setup.colors[i],f=smallFont))
         
-        readyText.append(Text("Ready",(x+smallFont.size(text)[0],y),
-                              setup.green,f=smallFont))
-        unreadyText.append(Text("Not Ready",(x+smallFont.size(text)[0],y),
+        statusText.append(Text("Not Ready",(x+smallFont.size(text)[0],y),
                               setup.red,f=smallFont))
 
 
@@ -97,19 +94,17 @@ class State:
         self.board = []
         self.startFlag = 3
         self.deathResults = []
-        self.deathTexts = []
         self.ready = [False]*setup.players
+        self.statusText = []
 
 def killPlayer(state,i,j):
     yPos = len(state.deathResults)*40/3 + 20
     state.players[i].alive = False
-    state.deathResults.append((i,i))
-    state.deathTexts.append((smallFont.render("Player "+str(i+1),
-    False,state.players[i].color),(10,yPos)))
-    state.deathTexts.append((smallFont.render(" killed by ",
-    False,setup.white),(60,yPos)))
-    state.deathTexts.append((smallFont.render("Player "+str(j+1),
-    False,state.players[j].color),(110,yPos)))
+    if(i!=j):
+        state.statusText[i].surface = smallFont.render("Killed by Player "+str(j+1),False,setup.colors[j])
+    else:
+        state.statusText[i].surface = smallFont.render("Killed Themself",False,setup.white)
+    state.deathResults.append((i,j))
 
 def drawHud(screen,state):
     x = 5*setup.width//6-10
@@ -120,10 +115,7 @@ def drawHud(screen,state):
 
     for i in range(setup.players):
         screen.blit(playerText[i].surface,playerText[i].pos)
-        if(state.ready[i]):
-            screen.blit(readyText[i].surface,readyText[i].pos)
-        else:
-            screen.blit(unreadyText[i].surface,unreadyText[i].pos)
+        screen.blit(statusText[i].surface,statusText[i].pos)
 
     for i in scoresText[:setup.players]:
         for button in i:
@@ -134,20 +126,31 @@ def drawHud(screen,state):
 
 def update(screen,state):
     drawHud(screen,state)
+    state.statusText = statusText
     
-    if(state.startFlag>-2):
-        screen.blit(textList[state.startFlag][0],textList[state.startFlag][1])
-        state.startFlag-=1
-        
-        if(state.startFlag!=2):
-            time.sleep(1)
+    if(state.startFlag>-1):
+
+        if(False not in state.ready):
+            screen.blit(textList[state.startFlag][0],textList[state.startFlag][1])
+            state.startFlag-=1
+            
+            if(state.startFlag!=2):
+                time.sleep(1)
+                
+        for j in range(setup.players):
+            if(state.players[j].alive and setup.humanList[j]):
+                for i in range(0,len(keyDirections[0])):
+                    if(inputControl.keys[keyDirections[j][i]]):
+                        if(state.startFlag>0):
+                            state.ready[j] = True
+                            statusText[j].surface = smallFont.render("Ready",False,setup.green)
+
         return 1
-    
+        
     #Update the players
     for i in range(setup.players):
         currentPlayer = state.players[i]
         if(currentPlayer.alive):
-
             #Update the players positions
             for j in range(1,currentPlayer.speed+1):
                 newPos = currentPlayer.pos+currentPlayer.direction*j
@@ -177,17 +180,13 @@ def update(screen,state):
         pygame.draw.rect(screen,state.players[state.board[i][1]].color,(state.board[i][0].x,
                                                    state.board[i][0].y,1,1))
 
-    #Draw the death board
-    for i in state.deathTexts:
-        screen.blit(i[0],i[1])
 
     #Get key input
     for j in range(setup.players):
         if(state.players[j].alive and setup.humanList[j]):
             for i in range(0,len(keyDirections[0])):
-                if(inputControl.keys[keyDirections[j][i]]):
-                    if(dot(keyVectors[i],state.players[j].direction)==0):
-                        state.players[j].direction = keyVectors[i]
+                if(inputControl.keyTap[keyDirections[j][i]] and dot(keyVectors[i],state.players[j].direction)==0):
+                    state.players[j].direction = keyVectors[i]
 
     #If a player presses space, kill off someone
     if(inputControl.keyTap[pygame.K_SPACE]):

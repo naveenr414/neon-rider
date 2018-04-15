@@ -58,6 +58,7 @@ while not done:
         if(state==0):
             #Create a new game state
             state = game.State()
+            print(state.startFlag)
         stage = game.update(screen,state)
     
     if(stage!=Game):
