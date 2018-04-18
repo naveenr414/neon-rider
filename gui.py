@@ -3,12 +3,9 @@ import pygame
 import inputControl
 from geometry import intersect, Rectangle, Vector
 import copy
+import font
 
-#Create a font
-pygame.font.init()
-font = pygame.font.SysFont('Comic Sans MS',30)
-font.set_bold(True)
-
+#Create a font.largeFont
 class Button:
     def __init__(self,imageLocation,location):
         self.image = pygame.image.load(imageLocation)
@@ -21,7 +18,7 @@ class Button:
         return intersect(p,self.rect)
 
 class Text:
-    def __init__(self,text,pos,color,f=font):
+    def __init__(self,text,pos,color,f=font.largeFont):
         self.surface = f.render(text,False,color)
         self.pos = pos
         
@@ -29,7 +26,7 @@ def createScores():
     textS = []
     for i in range(setup.players+1):
         x = setup.width//6-10
-        y = setup.height//4+font.get_height() * (i+1)
+        y = setup.height//4+font.largeFont.get_height() * (i+1)
 
         text = "Player "+str(i)+": "
         color = setup.white
@@ -42,7 +39,7 @@ def createScores():
         textS.append(Text(text,(x,y),color))
 
         if(i!=0):
-            x = setup.width//6-10 + font.size(text)[0]
+            x = setup.width//6-10 + font.largeFont.size(text)[0]
             textS.append(Text(str(setup.scores[i-1]),(x,y),setup.white))
 
     return textS

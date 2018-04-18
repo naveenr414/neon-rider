@@ -1,4 +1,6 @@
 import pygame
+pygame.init()
+
 import gui
 import setup
 import inputControl
@@ -6,8 +8,6 @@ import game
 
 WIDTH = setup.width
 HEIGHT = setup.height
-
-pygame.init()
 
 screen = pygame.display.set_mode((WIDTH,HEIGHT))
 done = False

@@ -6,43 +6,18 @@ import pygame
 import inputControl
 import time
 from gui import Text
+from player import *
+import font
 
-class Player:
-    def __init__(self,pos,color,direction,number,isHuman):
-        self.speed = 10
-        self.pos = pos
-        self.color = color
-        self.direction = direction
-        self.number = number
-        self.isHuman = isHuman
-        self.alive = True
-
-initialPlayers = [
-Player(Vector(120, 120), setup.blue, geometry.right, 1, True),
-Player(Vector(900, 420), setup.green, geometry.left, 3, False),
-Player(Vector(900, 120), setup.red, geometry.down, 2, False),
-Player(Vector(120, 420), setup.yellow, geometry.up, 4, False),
-    ]
-
-keyDirections = [[pygame.K_w,pygame.K_a,pygame.K_s,pygame.K_d],
-                 [pygame.K_UP,pygame.K_LEFT,pygame.K_DOWN,pygame.K_RIGHT],
-                 [pygame.K_y,pygame.K_g,pygame.K_h,pygame.K_j],
-                 [pygame.K_p,pygame.K_l,pygame.K_SEMICOLON,pygame.K_QUOTE]]
-keyVectors = [Vector(0,-1),Vector(-1,0),Vector(0,1),Vector(1,0)]
-
-playerKeys = ["W, A, S, D", "Arrow Keys", "Y, G, H, J", "P, L, ;, '"]
-playerTexts = []
-
-textFont = pygame.font.SysFont('arial',25)
-smallFont = pygame.font.SysFont('Comic Sans MS',15)
-smallFont.set_bold(True)
-textList = []
+startText = []
 
 for i in range(0,4):
+    x = setup.gameWidth//2
+    y = setup.height//2
     if(i==0):
-        textList.append((textFont.render("GO!",False,setup.white),(setup.width//2,setup.height//2)))
+        startText.append((font.largeFont.render("GO!",False,setup.white),(x,y)))
     else:
-        textList.append((textFont.render(str(i),False,setup.white),(setup.width//2,setup.height//2)))
+        startText.append((font.largeFont.render(str(i),False,setup.white),(x,y)))
 
 x = 5*setup.width//6
 hudText = []
@@ -50,41 +25,41 @@ playerText = []
 statusText = []
 
 for i in range(-1,setup.players):
-    y = setup.height//10+smallFont.get_height()*(i+1)
+    y = setup.height//10+font.smallFont.get_height()*(i+1)
 
     if(i==-1):
-        hudText.append(Text("Status:",(x,y),setup.white,f=smallFont))
+        hudText.append(Text("Status:",(x,y),setup.white,f=font.smallFont))
     else:
         text = "Player "+str(i+1)+": "
-        playerText.append(Text(text,(x,y),setup.colors[i],f=smallFont))
+        playerText.append(Text(text,(x,y),setup.colors[i],f=font.smallFont))
         
-        statusText.append(Text("Not Ready",(x+smallFont.size(text)[0],y),
-                              setup.red,f=smallFont))
+        statusText.append(Text("Not Ready",(x+font.smallFont.size(text)[0],y),
+                              setup.red,f=font.smallFont))
 
 
 scoresText = []
 for i in range(-1,setup.players):
     temp = []
-    y = setup.height//3+smallFont.get_height()*(i+1)
+    y = setup.height//3+font.smallFont.get_height()*(i+1)
 
     if(i==-1):
-        hudText.append(Text("Scores:",(x,y),setup.white,f=smallFont))
+        hudText.append(Text("Scores:",(x,y),setup.white,f=font.smallFont))
     else:
         text = "Player "+str(i+1)+ ": "
         temp.append(Text("Player "+str(i+1)+": ",(x,y),
-                         setup.colors[i],f=smallFont))
-        temp.append(Text(str(setup.scores[i]),(x+smallFont.size(text)[0],y),
-                         setup.white,f=smallFont))
+                         setup.colors[i],f=font.smallFont))
+        temp.append(Text(str(setup.scores[i]),(x+font.smallFont.size(text)[0],y),
+                         setup.white,f=font.smallFont))
         scoresText.append(temp)
 
 
 controlText = []
 for i in range(-1,setup.players):
-    y = 3*setup.height//5+smallFont.get_height()*(i+1)
+    y = 3*setup.height//5+font.smallFont.get_height()*(i+1)
     if(i==-1):
-        hudText.append(Text("Controls:",(x,y),setup.white,f=smallFont))
+        hudText.append(Text("Controls:",(x,y),setup.white,f=font.smallFont))
     else:
-        controlText.append(Text("Player "+str(i+1)+": "+playerKeys[i],(x,y),setup.colors[i],f=smallFont))
+        controlText.append(Text("Player "+str(i+1)+": "+playerKeys[i],(x,y),setup.colors[i],f=font.smallFont))
 
 class State:
     def __init__(self):
@@ -97,13 +72,20 @@ class State:
         self.ready = [False]*setup.players
         self.statusText = []
 
+        #GUI Things
+        self.controlText = []
+        self.scoresText = []
+        self.hudText = []
+        self.playerText = []
+        self.statusText = []
+
 def killPlayer(state,i,j):
     yPos = len(state.deathResults)*40/3 + 20
     state.players[i].alive = False
     if(i!=j):
-        state.statusText[i].surface = smallFont.render("Killed by Player "+str(j+1),False,setup.colors[j])
+        state.statusText[i].surface = font.smallFont.render("Killed by Player "+str(j+1),False,setup.colors[j])
     else:
-        state.statusText[i].surface = smallFont.render("Killed Themself",False,setup.white)
+        state.statusText[i].surface = font.smallFont.render("Killed Themself",False,setup.white)
     state.deathResults.append((i,j))
 
 def drawHud(screen,state):
@@ -124,27 +106,44 @@ def drawHud(screen,state):
     for i in controlText[:setup.players]:
         screen.blit(i.surface,i.pos)
 
+def processInput(screen,state):
+    #Get key input
+    for j in range(setup.players):
+        if(state.players[j].alive and setup.humanList[j]):
+            for i in range(0,len(keyDirections[0])):
+                if(inputControl.keyTap[keyDirections[j][i]] and dot(keyVectors[i],state.players[j].direction)==0):
+                    state.players[j].direction = keyVectors[i]
+
+    #If a player presses space, kill off someone
+    if(inputControl.keyTap[pygame.K_SPACE]):
+        for j in range(setup.players):
+            if(state.players[j].alive):
+                    killPlayer(state,j,j)
+                    break
+
+def pregame(screen,state):
+    if(False not in state.ready):
+        screen.blit(startText[state.startFlag][0],startText[state.startFlag][1])
+        state.startFlag-=1
+        
+        if(state.startFlag!=2):
+            time.sleep(1)
+            
+    for j in range(setup.players):
+        if(state.players[j].alive and setup.humanList[j]):
+            for i in range(0,len(keyDirections[0])):
+                if(inputControl.keys[keyDirections[j][i]]):
+                    if(state.startFlag>0):
+                        state.ready[j] = True
+                        statusText[j].surface = font.smallFont.render("Ready",False,setup.green)
+
+
 def update(screen,state):
     drawHud(screen,state)
     state.statusText = statusText
     
     if(state.startFlag>-1):
-
-        if(False not in state.ready):
-            screen.blit(textList[state.startFlag][0],textList[state.startFlag][1])
-            state.startFlag-=1
-            
-            if(state.startFlag!=2):
-                time.sleep(1)
-                
-        for j in range(setup.players):
-            if(state.players[j].alive and setup.humanList[j]):
-                for i in range(0,len(keyDirections[0])):
-                    if(inputControl.keys[keyDirections[j][i]]):
-                        if(state.startFlag>0):
-                            state.ready[j] = True
-                            statusText[j].surface = smallFont.render("Ready",False,setup.green)
-
+        pregame(screen,state)
         return 1
         
     #Update the players
@@ -179,21 +178,7 @@ def update(screen,state):
     for i in range(0,len(state.board)):
         pygame.draw.rect(screen,state.players[state.board[i][1]].color,(state.board[i][0].x,
                                                    state.board[i][0].y,1,1))
-
-
-    #Get key input
-    for j in range(setup.players):
-        if(state.players[j].alive and setup.humanList[j]):
-            for i in range(0,len(keyDirections[0])):
-                if(inputControl.keyTap[keyDirections[j][i]] and dot(keyVectors[i],state.players[j].direction)==0):
-                    state.players[j].direction = keyVectors[i]
-
-    #If a player presses space, kill off someone
-    if(inputControl.keyTap[pygame.K_SPACE]):
-        for j in range(setup.players):
-            if(state.players[j].alive):
-                    killPlayer(state,j,j)
-                    break
+    processInput(screen,state)
 
     #Check if any players are alive, if not, exit
     for i in range(0,setup.players):
