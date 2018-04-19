@@ -1,5 +1,5 @@
 import setup
-from geometry import Rectangle, Vector, dot
+from geometry import Rectangle, Vector, Line, dot, colinear
 import geometry
 import copy
 import pygame
@@ -71,6 +71,7 @@ class State:
         self.deathResults = []
         self.ready = [False]*setup.players
         self.statusText = []
+        self.time = 0
 
         #GUI Things
         self.controlText = []
@@ -86,7 +87,7 @@ def killPlayer(state,i,j):
         state.statusText[i].surface = font.smallFont.render("Killed by Player "+str(j+1),False,setup.colors[j])
     else:
         state.statusText[i].surface = font.smallFont.render("Killed Themself",False,setup.white)
-    state.deathResults.append((i,j))
+    state.deathResults.append(Death(i,j,state.time,state.players[i].pos))
 
 def drawHud(screen,state):
     x = 5*setup.width//6-10
@@ -153,32 +154,45 @@ def update(screen,state):
             #Update the players positions
             for j in range(1,currentPlayer.speed+1):
                 newPos = currentPlayer.pos+currentPlayer.direction*j
+                #Check if they were killed by going outside the box, or by another player
                 if(newPos.x<0 or newPos.x>setup.gameWidth
-                or newPos.y<0 or newPos.y>setup.height
-                or newPos in [x[0] for x in state.board]):
-                    currentPlayer.alive = False
-
-                    #Check if they were killed by going outside the box, or by another player
-                    if(newPos.x<0 or newPos.x>setup.gameWidth
-                    or newPos.y<0 or newPos.y>setup.height):
-                        killPlayer(state,i,i)
-                    else:
-                        for loc in state.board:
-                            if(loc[0]==newPos):
-                                killPlayer(state,i,loc[1])
-                    break
-
-                
+                or newPos.y<0 or newPos.y>setup.height):
+                    print(i)
+                    #currentPlayer.alive = False
+                    killPlayer(state,i,i)
                 else:
-                    #Add the tuple (position,player number) to the board
-                    state.board.append([newPos,i])
+                    for r in range(setup.players):
+                        for line in state.players[r].lines:
+                            end = line.direction*line.length+line.start
+                            if(colinear(newPos,line.start,end)
+                               and min(line.start.x,end.x)<=newPos.x<=max(line.start.x,end.x)
+                               and max(line.start.y,end.y)<=newPos.y<=max(line.start.y,end.y)):
+                                #currentPlayer.alive = False
+                                killPlayer(state,i,r)
+
+            if(len(currentPlayer.lines)==0
+               or currentPlayer.lines[-1].direction!=currentPlayer.direction):
+                l = Line(currentPlayer.pos,currentPlayer.direction,currentPlayer.speed)
+                currentPlayer.lines.append(l)
+            else:
+                currentPlayer.lines[-1].length+=currentPlayer.speed
+            
             currentPlayer.pos+=currentPlayer.direction*currentPlayer.speed
+            #print(currentPlayer.lines[-1])
 
     #Draw the board
-    for i in range(0,len(state.board)):
-        pygame.draw.rect(screen,state.players[state.board[i][1]].color,(state.board[i][0].x,
-                                                   state.board[i][0].y,1,1))
+    for i in range(setup.players):
+        currentPlayer = state.players[i]
+        for j in currentPlayer.lines:
+            end = j.start+j.direction*j.length
+            pygame.draw.line(screen,currentPlayer.color,(j.start.x,j.start.y),(end.x,end.y))
+    
+    #for i in range(0,len(state.board)):
+    #    pygame.draw.rect(screen,state.players[state.board[i][1]].color,(state.board[i][0].x,
+    #                                               state.board[i][0].y,1,1))
     processInput(screen,state)
+
+    state.time+=1
 
     #Check if any players are alive, if not, exit
     for i in range(0,setup.players):

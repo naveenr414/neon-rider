@@ -11,6 +11,14 @@ class Player:
         self.number = number
         self.isHuman = isHuman
         self.alive = True
+        self.lines = []
+
+class Death:
+    def __init__(self,victim,killer,time,location):
+        self.victim = victim
+        self.killer = killer
+        self.time = time
+        self.location = location
  
 initialPlayers = [
 Player(geometry.Vector(120, 120), setup.blue, geometry.right, 1, True),

@@ -19,6 +19,9 @@ class Vector:
     def __add__(self,other):
         return Vector(self.x+other.x,self.y+other.y)
 
+    def __sub__(self,other):
+        return Vector(self.x-other.x,self.y-other.y)
+
     def __mul__(self,other):
         return Vector(self.x*other,self.y*other)
 
@@ -36,6 +39,15 @@ class Vector:
 
     def toArray(self):
         return [self.x,self.y]
+
+class Line:
+    def __init__(self,start,direction,length):
+        self.start = start
+        self.direction = direction
+        self.length = length
+
+    def __str__(self):
+        return str(self.start) + " " +str(self.direction) + " "+str(self.length)
 
 def intersect(point,rect):
     return rect.x<=point[0]<=rect.x+rect.width and rect.y<=point[1]<=rect.y+rect.height
