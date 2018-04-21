@@ -8,6 +8,7 @@ import time
 from gui import Text
 from player import *
 import font
+import ai
 
 startText = []
 
@@ -65,7 +66,7 @@ class State:
     def __init__(self):
         self.players = []
         for i in range(0,setup.players):
-            self.players.append(copy.copy(initialPlayers[i]))
+            self.players.append(copy.deepcopy(initialPlayers[i]))
         self.board = []
         self.startFlag = 3
         self.deathResults = []
@@ -131,7 +132,7 @@ def pregame(screen,state):
             time.sleep(1)
             
     for j in range(setup.players):
-        if(state.players[j].alive and setup.humanList[j]):
+        if(state.players[j].alive):
             for i in range(0,len(keyDirections[0])):
                 if(inputControl.keys[keyDirections[j][i]]):
                     if(state.startFlag>0):
@@ -144,6 +145,7 @@ def update(screen,state):
     state.statusText = statusText
     
     if(state.startFlag>-1):
+        print("Pregame")
         pregame(screen,state)
         return 1
         
@@ -157,8 +159,6 @@ def update(screen,state):
                 #Check if they were killed by going outside the box, or by another player
                 if(newPos.x<0 or newPos.x>setup.gameWidth
                 or newPos.y<0 or newPos.y>setup.height):
-                    print(i)
-                    #currentPlayer.alive = False
                     killPlayer(state,i,i)
                 else:
                     for r in range(setup.players):
@@ -167,7 +167,6 @@ def update(screen,state):
                             if(colinear(newPos,line.start,end)
                                and min(line.start.x,end.x)<=newPos.x<=max(line.start.x,end.x)
                                and max(line.start.y,end.y)<=newPos.y<=max(line.start.y,end.y)):
-                                #currentPlayer.alive = False
                                 killPlayer(state,i,r)
 
             if(len(currentPlayer.lines)==0
@@ -178,7 +177,6 @@ def update(screen,state):
                 currentPlayer.lines[-1].length+=currentPlayer.speed
             
             currentPlayer.pos+=currentPlayer.direction*currentPlayer.speed
-            #print(currentPlayer.lines[-1])
 
     #Draw the board
     for i in range(setup.players):
@@ -186,10 +184,11 @@ def update(screen,state):
         for j in currentPlayer.lines:
             end = j.start+j.direction*j.length
             pygame.draw.line(screen,currentPlayer.color,(j.start.x,j.start.y),(end.x,end.y))
-    
-    #for i in range(0,len(state.board)):
-    #    pygame.draw.rect(screen,state.players[state.board[i][1]].color,(state.board[i][0].x,
-    #                                               state.board[i][0].y,1,1))
+
+    for i in range(setup.players):
+        if(state.players[i].alive and not(setup.humanList[i])):
+            ai.basic(state,i)
+
     processInput(screen,state)
 
     state.time+=1

@@ -36,7 +36,7 @@ while not done:
 
         if(event.type == pygame.MOUSEBUTTONDOWN):
             inputControl.mouseDown = True
-
+    
         if(event.type == pygame.MOUSEBUTTONUP):
             inputControl.mouseDown = False
 

@@ -21,10 +21,10 @@ class Death:
         self.location = location
  
 initialPlayers = [
-Player(geometry.Vector(120, 120), setup.blue, geometry.right, 1, True),
-Player(geometry.Vector(900, 420), setup.green, geometry.left, 3, False),
-Player(geometry.Vector(900, 120), setup.red, geometry.down, 2, False),
-Player(geometry.Vector(120, 420), setup.yellow, geometry.up, 4, False),
+Player(geometry.Vector(120, 120), setup.colors[0], geometry.right, 1, True),
+Player(geometry.Vector(900, 420), setup.colors[1], geometry.left, 3, False),
+Player(geometry.Vector(900, 120), setup.colors[2], geometry.down, 2, False),
+Player(geometry.Vector(120, 420), setup.colors[3], geometry.up, 4, False),
 ]
 
 keyDirections = [[pygame.K_w,pygame.K_a,pygame.K_s,pygame.K_d],
