@@ -27,7 +27,7 @@ state = 0
 clock = pygame.time.Clock()
     
 while not done:
-    clock.tick(30)
+    clock.tick(2)
 
     inputControl.keyTap = [False for i in range(0,300)]
     for event in pygame.event.get():

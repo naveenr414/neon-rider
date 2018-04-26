@@ -4,7 +4,7 @@ import geometry
 
 class Player:
     def __init__(self,pos,color,direction,number,isHuman):
-        self.speed = 10
+        self.speed = 1
         self.pos = pos
         self.color = color
         self.direction = direction
@@ -26,6 +26,10 @@ Player(geometry.Vector(900, 420), setup.colors[1], geometry.left, 3, False),
 Player(geometry.Vector(900, 120), setup.colors[2], geometry.down, 2, False),
 Player(geometry.Vector(120, 420), setup.colors[3], geometry.up, 4, False),
 ]
+
+for i in initialPlayers:
+    i.pos.x//=setup.blockSize
+    i.pos.y//=setup.blockSize
 
 keyDirections = [[pygame.K_w,pygame.K_a,pygame.K_s,pygame.K_d],
                  [pygame.K_UP,pygame.K_LEFT,pygame.K_DOWN,pygame.K_RIGHT],

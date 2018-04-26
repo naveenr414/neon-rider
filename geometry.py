@@ -68,3 +68,4 @@ right = Vector(1,0)
 left = Vector(-1,0)
 up = Vector(0,-1)
 down = Vector(0,1)
+directions = [right,left,up,down]
