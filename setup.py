@@ -1,7 +1,7 @@
 width = 1200
 height = 600
 gameWidth = width*5//6-10
-blockSize = 40
+blockSize = 1
 
 #Colors
 black = (0,0,0)

@@ -145,7 +145,6 @@ def update(screen,state):
     state.statusText = statusText
     
     if(state.startFlag>-1):
-        print("Pregame")
         pregame(screen,state)
         return 1
 
@@ -159,7 +158,6 @@ def update(screen,state):
             for j in range(1,currentPlayer.speed+1):
                 newPos = currentPlayer.pos+currentPlayer.direction*j
                 #Check if they were killed by going outside the box, or by another player
-                print(newPos.x,setup.gameWidth)
                 if(newPos.x<0 or newPos.x>setup.gameWidth//setup.blockSize
                 or newPos.y<0 or newPos.y>setup.height//setup.blockSize):
                     killPlayer(state,i,i)
@@ -192,14 +190,11 @@ def update(screen,state):
             height = max(abs(end.y-j.start.y)*setup.blockSize,setup.blockSize)
                         
             r = pygame.Rect(left*setup.blockSize,top*setup.blockSize,width,height)
-            if(i==1):
-                print(abs(end.x-j.start.x)*setup.blockSize,
-                             abs(end.y-j.start.y)*setup.blockSize)
             pygame.draw.rect(screen,currentPlayer.color,r)
 
     for i in range(setup.players):
         if(state.players[i].alive and not(setup.humanList[i])):
-            ai.basic(state,i)
+            ai.minMax(state,i)
 
 
     state.time+=1
